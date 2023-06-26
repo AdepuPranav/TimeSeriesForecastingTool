@@ -50,22 +50,31 @@ st.sidebar.image("https://www.analyticssteps.com/backend/media/thumbnail/6350483
 st.sidebar.header("1. DATA")
 
 with st.sidebar.expander("Uploading Dataset"): # Exapander inside Sidebar for UPLOADING DATA
+
+    default_data=st.checkbox("Use Demo Dataset", value=False,key="default data")
+
     upload = st.file_uploader("Upload File", type={"csv"}) # File Uploader
 
     if upload is not None: # Checking if File is uploaded or not, If Something is Uploaded then only the "if" condition gets satisfied.
         df = pd.read_csv(upload,index_col=0) # Reading the CSV file as 'df' DataFrame. There should be one index like column in data other than Date and other important columns.
         df2 = df.copy()  #  'df2' is initialized so that we can always have a copy of Original Uploaded Dataset. All processing will be done on 'df'
+    
+    
+    if default_data==True:
+        df=pd.read_csv("trial_dataset2.csv", index_col=0)
+        df2=df.copy()
+        upload=1
 
 
 with st.sidebar.expander("Info About Data"):
 
     if upload is not None:
-        date_column=st.selectbox("Please Select Date Column",df.columns.to_list()) # The User has to select the Column name that has Dates/Time in the Time Series Data.
+        date_column=st.selectbox("Please Select Date Column",df.columns.to_list(),index=1 if default_data else 0) # The User has to select the Column name that has Dates/Time in the Time Series Data.
         date_format=st.text_input("What is the Date Format", value=r"%Y-%m-%d", help=r"For example '%Y-%m-%d' or '%d/%m/%Y %H:%M:%S'") # User has to mention the format in which Date is there in the Date Column. 
-        target_column=st.selectbox("Please Select Target Column",df.columns.to_list()) # The User has to select the Target column/y_variable which will be varying with Time and whose value has to be forecasted.
+        target_column=st.selectbox("Please Select Target Column",df.columns.to_list(), index=2 if default_data else 0) # The User has to select the Target column/y_variable which will be varying with Time and whose value has to be forecasted.
     
         freq_unit=st.selectbox("Unit of time present in time Series Data",["days","hours","minutes","seconds"])  # the frequency unit of Time Series data.
-        freq=st.number_input(f"Frequency of Time Series in {freq_unit}",value=1.0,min_value=0.0) # Magnitude of frequency in 'freq_unit'.
+        freq=st.number_input(f"Frequency of Time Series in {freq_unit}",value=7.0 if default_data else 1.0,min_value=0.0) # Magnitude of frequency in 'freq_unit'.
         
         
 with st.sidebar.expander("Filtering Data"): # Exapander inside Sidebar for FILTERING DATASET
@@ -96,7 +105,7 @@ with st.sidebar.expander("Filtering Data"): # Exapander inside Sidebar for FILTE
 
 # We need to check everytime whether 'upload' is None or not, i.e whether the User has uploaded the Data or not. If the User hasn't uploaded the Data then we need not calculate/display anything on the site. 
 if upload is not None:
-    filter_button=st.sidebar.checkbox("Apply Filter to Dataset",value=False) # Only After checking this button all the filtering, that user mentioned in different containers of DATA and MODELLING sections, takes place on the Dataset that user uploaded in "Uploading Datset" container.
+    filter_button=st.sidebar.checkbox("Apply Filter to Dataset",value=True if default_data else False) # Only After checking this button all the filtering, that user mentioned in different containers of DATA and MODELLING sections, takes place on the Dataset that user uploaded in "Uploading Datset" container.
 
 
 
@@ -377,7 +386,7 @@ if upload is not None:
 ## Fitting Data to the Model along with Hyperparameters mentioned in Above Sections.
 if upload is not None:
 
-    launch=st.checkbox("Launch Model",value=False, help="Check to launch forecast. A new forecast will be made each time some parameter is changed in the sidebar.")
+    launch=st.checkbox("Launch Model",value=True if default_data else False, help="Check to launch forecast. A new forecast will be made each time some parameter is changed in the sidebar.")
 
     if launch and filter_button:
 
