@@ -26,6 +26,18 @@ def convert_df(df):
     return df.to_csv().encode('utf-8')
 
 
+def get_adi_cv2(series):
+    
+    total_periods=series.count()
+    non_zero_periods=series.loc[series!=0].count()
+    adi=total_periods/non_zero_periods
+    
+    non_zero_series=series.loc[series!=0]
+    cv2=(np.std(non_zero_series)/np.mean(non_zero_series))**2
+    
+    return adi,cv2
+
+
 
 from prophet import Prophet
 from prophet.diagnostics import cross_validation
@@ -107,7 +119,23 @@ with st.sidebar.expander("Filtering Data"): # Exapander inside Sidebar for FILTE
 if upload is not None:
     filter_button=st.sidebar.checkbox("Apply Filter to Dataset",value=True if default_data else False) # Only After checking this button all the filtering, that user mentioned in different containers of DATA and MODELLING sections, takes place on the Dataset that user uploaded in "Uploading Datset" container.
 
+    adi_value,cv2_value=get_adi_cv2(df[target_column])
+    adi,cv2=st.columns(2)
 
+    adi.metric("**:red[ADI]**", f"{round(adi_value,2)}")
+    cv2.metric("**:red[CV Squared]**", f"{round(cv2_value,2)}")
+
+    if adi_value<1.32 and cv2_value<0.49:
+        classification="SMOOTH PATTERN"
+    elif adi_value>=1.32 and cv2_value<0.49:
+        classification="INTERMITTENT PATTERN"
+    elif adi_value<1.32 and cv2_value>=0.49:
+        classification="ERRATIC PATTERN"
+    else:
+        classification="LUMPY PATTERN"
+
+    st.subheader(body=f"The Data Shows : {classification}")
+    st.write("To read about Demand Classification, ADI and CV2 in Detail Check Out : [Link](https://frepple.com/blog/demand-classification/)")
 
 
 
